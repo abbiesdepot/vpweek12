@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  // url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  phone String @db.VarChar(20)
+  createdat DateTime @default(now())
+  updatedat DateTime @updatedAt
+
+  orders Order[] //many to many stuff; one cust can hv many orders
+  customerRestaurants CustomerRestaurant[]
+  @@map("customers")
+}
+
+model Restaurant {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  description String? @db.Text
+  isOpen Boolean @default(true)
+  createdat DateTime @default(now())
+  updatedat DateTime @updatedAt
+  orders Order[] //one resto can hv many orders
+  customerRestaurants CustomerRestaurant[]
+
+  @@map("restaurants")
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  customerId Int //FK
+  restaurantId Int //FK
+  orderdetails String @db.Text //mereka order apa
+  itemcount Int //num of items
+  orderat DateTime @default(now())
+
+  //relations
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("orders")
+
+}
+
+//pivot table hrsnya ahjjda gtw
+model CustomerRestaurant {
+  id Int @id @default(autoincrement())
+  customerId Int
+  restaurantId Int
+  createdAt DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, restaurantId])
+  @@map("customer_restaurants")
+}
